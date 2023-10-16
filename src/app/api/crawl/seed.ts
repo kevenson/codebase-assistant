@@ -1,20 +1,20 @@
 import { getEmbeddings } from "@/utils/embeddings";
 import { Document, MarkdownTextSplitter, RecursiveCharacterTextSplitter } from "@pinecone-database/doc-splitter";
+import { chunkedUpsert } from "@/utils/chunkedUpsert";
 import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone";
-import { chunkedUpsert } from '../../utils/chunkedUpsert'
+import { LocalCrawler, Page } from "@/api/crawl/localCrawler"; // Adjust the import path as needed
 import md5 from "md5";
-import { Crawler, Page } from "./crawler";
-import { truncateStringByBytes } from "@/utils/truncateString"
+import { truncateStringByBytes } from "@/utils/truncateString";
 
 interface SeedOptions {
-  splittingMethod: string
-  chunkSize: number
-  chunkOverlap: number
+  splittingMethod: string;
+  chunkSize: number;
+  chunkOverlap: number;
 }
 
-type DocumentSplitter = RecursiveCharacterTextSplitter | MarkdownTextSplitter
+type DocumentSplitter = RecursiveCharacterTextSplitter | MarkdownTextSplitter;
 
-async function seed(url: string, limit: number, indexName: string, options: SeedOptions) {
+async function seed(startPath: string, ignoreFile: string, limit: number, indexName: string, options: SeedOptions) {
   try {
     // Initialize the Pinecone client
     const pinecone = new Pinecone();
@@ -22,11 +22,11 @@ async function seed(url: string, limit: number, indexName: string, options: Seed
     // Destructure the options object
     const { splittingMethod, chunkSize, chunkOverlap } = options;
 
-    // Create a new Crawler with depth 1 and maximum pages as limit
-    const crawler = new Crawler(1, limit || 100);
+    // Create a new LocalCrawler with a maximum number of pages as limit
+    const crawler = new LocalCrawler(limit || 100);
 
-    // Crawl the given URL and get the pages
-    const pages = await crawler.crawl(url) as Page[];
+    // Crawl the given directory and get the pages
+    const pages = await crawler.crawl(startPath, ignoreFile) as Page[];
 
     // Choose the appropriate document splitter based on the splitting method
     const splitter: DocumentSplitter = splittingMethod === 'recursive' ?
@@ -37,7 +37,7 @@ async function seed(url: string, limit: number, indexName: string, options: Seed
 
     // Create Pinecone index if it does not exist
     const indexList = await pinecone.listIndexes();
-    const indexExists = indexList.some(index => index.name === indexName)
+    const indexExists = indexList.some(index => index.name === indexName);
     if (!indexExists) {
       await pinecone.createIndex({
         name: indexName,
@@ -46,7 +46,7 @@ async function seed(url: string, limit: number, indexName: string, options: Seed
       });
     }
 
-    const index = pinecone.Index(indexName)
+    const index = pinecone.Index(indexName);
 
     // Get the vector embeddings for the documents
     const vectors = await Promise.all(documents.flat().map(embedDocument));
@@ -72,18 +72,18 @@ async function embedDocument(doc: Document): Promise<PineconeRecord> {
 
     // Return the vector embedding object
     return {
-      id: hash, // The ID of the vector is the hash of the document content
-      values: embedding, // The vector values are the OpenAI embeddings
-      metadata: { // The metadata includes details about the document
-        chunk: doc.pageContent, // The chunk of text that the vector represents
-        text: doc.metadata.text as string, // The text of the document
-        url: doc.metadata.url as string, // The URL where the document was found
-        hash: doc.metadata.hash as string // The hash of the document content
+      id: hash,
+      values: embedding,
+      metadata: {
+        chunk: doc.pageContent,
+        text: doc.metadata.text as string,
+        filepath: doc.metadata.path as string, // Changed "url" to "filepath"
+        hash: doc.metadata.hash as string,
       }
     } as PineconeRecord;
   } catch (error) {
-    console.log("Error embedding document: ", error)
-    throw error
+    console.log("Error embedding document: ", error);
+    throw error;
   }
 }
 
@@ -96,9 +96,8 @@ async function prepareDocument(page: Page, splitter: DocumentSplitter): Promise<
     new Document({
       pageContent,
       metadata: {
-        url: page.url,
-        // Truncate the text to a maximum byte length
-        text: truncateStringByBytes(pageContent, 36000)
+        path: page.path, // Changed "url" to "path"
+        text: truncateStringByBytes(pageContent, 36000),
       },
     }),
   ]);
@@ -109,14 +108,10 @@ async function prepareDocument(page: Page, splitter: DocumentSplitter): Promise<
       pageContent: doc.pageContent,
       metadata: {
         ...doc.metadata,
-        // Create a hash of the document content
-        hash: md5(doc.pageContent)
+        hash: md5(doc.pageContent),
       },
     };
   });
 }
-
-
-
 
 export default seed;
