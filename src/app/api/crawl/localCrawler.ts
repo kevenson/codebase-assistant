@@ -7,6 +7,14 @@ interface Page {
   content: string;
 }
 
+interface DocumentFromAPI {
+  metadata: {
+    text: string;
+    filepath: string;
+    hash: string;
+  };
+}
+
 class LocalCrawler {
   private seen = new Set<string>();
   private pages: Page[] = [];
@@ -77,5 +85,5 @@ class LocalCrawler {
   }
 }
 
-export { LocalCrawler };
-export type { Page };
+export { LocalCrawler};
+export type { Page, DocumentFromAPI};

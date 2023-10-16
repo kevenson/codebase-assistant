@@ -1,7 +1,7 @@
 import { Pinecone, type ScoredPineconeRecord } from "@pinecone-database/pinecone";
 
 export type Metadata = {
-  url: string,
+  filepath: string,
   text: string,
   chunk: string,
   hash: string

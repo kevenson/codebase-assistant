@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Pinecone - Vercel AI SDK Example",
-  description: "Pinecone - Vercel AI SDK Example",
+  title: "Codebase Assistant",
+  description: "Personal AI Codebase Asstant using OpenAI, Pinecone, and Vercel AI SDK",
 };
 
 import "../global.css";

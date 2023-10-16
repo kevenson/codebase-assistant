@@ -1,6 +1,7 @@
 import React, { ChangeEvent, useCallback, useEffect, useState } from "react";
-import { urls } from "./urls";
-import UrlButton from "./UrlButton";
+//import UrlButton from "./UrlButton";
+import { LocalCrawler, Page, DocumentFromAPI } from "@/api/crawl/localCrawler"; // Adjust the import path as needed
+import { IUrlEntry } from "./UrlButton";
 import { Card, ICard } from "./Card";
 import { clearIndex, crawlDocument } from "./utils";
 
@@ -11,12 +12,15 @@ interface ContextProps {
 }
 
 export const Context: React.FC<ContextProps> = ({ className, selected }) => {
-  const [entries, setEntries] = useState(urls);
+  //const [entries, setEntries] = useState(urls);
+  const [directoryPath, setDirectoryPath] = useState(""); // New state for directory path
+  const [directoryEntries, setDirectoryEntries] = useState<IUrlEntry[]>([]);
   const [cards, setCards] = useState<ICard[]>([]);
 
   const [splittingMethod, setSplittingMethod] = useState("markdown");
   const [chunkSize, setChunkSize] = useState(256);
   const [overlap, setOverlap] = useState(1);
+  
 
   // Scroll to selected card
   useEffect(() => {
@@ -31,41 +35,78 @@ export const Context: React.FC<ContextProps> = ({ className, selected }) => {
       {children}
     </label>
   );
-
-  const buttons = entries.map((entry, key) => (
-    <div className="" key={`${key}-${entry.loading}`}>
-      <UrlButton
-        entry={entry}
-        onClick={() =>
-          crawlDocument(
-            entry.url,
-            setEntries,
-            setCards,
-            splittingMethod,
-            chunkSize,
-            overlap
-          )
+  // This is the new function that will be triggered when the user wants to seed from a directory
+  const handleSeedFromDirectory = async () => {
+    try {
+        const response = await fetch('/api/crawl', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                startPath: directoryPath,
+                ignoreFile: '/mockPath/.ignore',
+                options: {
+                    splittingMethod,
+                    chunkSize,
+                    chunkOverlap: overlap
+                }
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          setCards(data.documents.map((doc: DocumentFromAPI) => ({
+            title: doc.metadata.text,
+            description: doc.metadata.filepath,
+            id: doc.metadata.hash
+        })));
+        } else {
+            console.error('Error seeding:', data.error);
         }
-      />
-    </div>
-  ));
+    } catch (error) {
+        console.error('Error fetching:', error);
+    }
+};
+
+  // Set the directory using a prompt
+  const handleSetDirectory = () => {
+    const newDir = window.prompt("Enter the new directory path:", directoryPath);
+    if (newDir) {
+      setDirectoryPath(newDir);
+    }
+  };
 
   return (
-    <div
-      className={`flex flex-col border-2 overflow-y-auto rounded-lg border-gray-500 w-full ${className}`}
-    >
+    <div className={`flex flex-col border-2 overflow-y-auto rounded-lg border-gray-500 w-full ${className}`}>
       <div className="flex flex-col items-start sticky top-0 w-full">
         <div className="flex flex-col items-start lg:flex-row w-full lg:flex-wrap p-2">
-          {buttons}
-        </div>
-        <div className="flex-grow w-full px-4">
+          {/* Display current directory */}
+          <div className="p-2 mr-2 bg-gray-800 rounded text-white w-1/2">
+            Current Directory: {directoryPath}
+          </div>
+          
+          {/* Button to set/update the directory */}
           <Button
-            className="w-full my-2 uppercase active:scale-[98%] transition-transform duration-100"
-            style={{
-              backgroundColor: "#4f6574",
-              color: "white",
-            }}
-            onClick={() => clearIndex(setEntries, setCards)}
+            onClick={handleSetDirectory}
+            className="my-2 mr-2"
+          >
+            Set Directory
+          </Button>
+
+          {/* Seed from Directory button */}
+          <Button
+            onClick={handleSeedFromDirectory}
+            className="my-2 mr-2"
+          >
+            Seed from Directory
+          </Button>
+
+          {/* Clear Index button */}
+          <Button
+            onClick={() => clearIndex(setDirectoryEntries, setCards)}
+            className="my-2"
+            style={{ backgroundColor: "#4f6574", color: "white" }}
           >
             Clear Index
           </Button>

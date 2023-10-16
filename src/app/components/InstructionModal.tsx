@@ -28,14 +28,12 @@ const InstructionModal: React.FC<InstructionModalProps> = ({
             Pinecone
           </a>{" "}
           and Vercel&apos;s AI SDK. In the context panel on the right, you can
-          see some articles you can index in Pinecone (on mobile, open the
-          context panel by clicking the button at the top left of the message
-          panel). Click on the blue link icons to open the URLs in a new window.
+          set a root directory of your codebase to index.
         </p>
         <br />
         <p>
           After you index them, you can ask the chatbot questions about the
-          specific of each article. The segments relevant to the answers the
+          specifics of the codebase. The segments relevant to the answers the
           chatbot gives will be highlighted.
         </p>
         <br />
