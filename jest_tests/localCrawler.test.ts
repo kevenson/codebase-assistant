@@ -1,4 +1,4 @@
-import { LocalCrawler, Page } from '../src/app/api/crawl/localCrawler';
+import { LocalCrawler, Page } from '../src/pages/api/crawl/localCrawler';
 import fs from 'fs';
 import { sep } from 'path';
 

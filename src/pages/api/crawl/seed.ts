@@ -2,7 +2,7 @@ import { getEmbeddings } from "@/utils/embeddings";
 import { Document, MarkdownTextSplitter, RecursiveCharacterTextSplitter } from "@pinecone-database/doc-splitter";
 import { chunkedUpsert } from "@/utils/chunkedUpsert";
 import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone";
-import { LocalCrawler, Page } from "@/api/crawl/localCrawler"; // Adjust the import path as needed
+import { LocalCrawler, Page } from "./localCrawler"; // Adjust the import path as needed
 import md5 from "md5";
 import { truncateStringByBytes } from "@/utils/truncateString";
 

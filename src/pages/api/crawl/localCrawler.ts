@@ -26,8 +26,18 @@ class LocalCrawler {
   async crawl(startPath: string, ignoreFile: string): Promise<Page[]> {
     // Load ignore patterns
     console.log(ignoreFile);
-    const ignorePatterns = fs.readFileSync(ignoreFile, 'utf-8');
-    this.ig.add(ignorePatterns);
+    //const ignorePatterns = fs.readFileSync(ignoreFile, 'utf-8');
+    //this.ig.add(ignorePatterns);
+    try {
+      const ignorePatterns = fs.readFileSync(ignoreFile, 'utf-8');
+      this.ig.add(ignorePatterns);
+    } catch (error) {
+      const nodeError = error as NodeJS.ErrnoException;
+    if (nodeError.code !== 'ENOENT') {
+        throw error; // Re-throw the error if it's not a "file not found" error
+      }
+      // Otherwise, just continue without adding ignore patterns
+    }
 
     // Start processing the directory
     this.processDirectory(startPath);

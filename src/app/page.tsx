@@ -14,6 +14,7 @@ const Page: React.FC = () => {
   const [gotMessages, setGotMessages] = useState(false);
   const [context, setContext] = useState<string[] | null>(null);
   const [isModalOpen, setModalOpen] = useState(false);
+  const [rootDir, setRootDir] = useState<string>("Current/Root/Directory/Path"); // Placeholder value
 
   const { messages, input, handleInputChange, handleSubmit } = useChat({
     onFinish: async () => {

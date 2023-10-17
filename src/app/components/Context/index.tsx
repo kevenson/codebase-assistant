@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useCallback, useEffect, useState } from "react";
 //import UrlButton from "./UrlButton";
-import { LocalCrawler, Page, DocumentFromAPI } from "@/api/crawl/localCrawler"; // Adjust the import path as needed
+import { LocalCrawler, Page, DocumentFromAPI } from "../../../pages/api/crawl/localCrawler"; // Adjust the import path as needed
 import { IUrlEntry } from "./UrlButton";
 import { Card, ICard } from "./Card";
 import { clearIndex, crawlDocument } from "./utils";
@@ -38,6 +38,7 @@ export const Context: React.FC<ContextProps> = ({ className, selected }) => {
   // This is the new function that will be triggered when the user wants to seed from a directory
   const handleSeedFromDirectory = async () => {
     try {
+      //const response = await fetch('/_edge/crawl', {
         const response = await fetch('/api/crawl', {
             method: 'POST',
             headers: {
@@ -45,7 +46,7 @@ export const Context: React.FC<ContextProps> = ({ className, selected }) => {
             },
             body: JSON.stringify({
                 startPath: directoryPath,
-                ignoreFile: '/mockPath/.ignore',
+                ignoreFile: '.ignore',
                 options: {
                     splittingMethod,
                     chunkSize,
