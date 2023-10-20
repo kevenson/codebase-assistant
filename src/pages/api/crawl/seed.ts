@@ -1,6 +1,8 @@
-import { getEmbeddings } from "@/utils/embeddings";
+//import { getEmbeddings } from "@/utils/embeddings";
+import { getEmbeddingsWithRetry } from "@/utils/embeddings";
 import { Document, MarkdownTextSplitter, RecursiveCharacterTextSplitter } from "@pinecone-database/doc-splitter";
 import { chunkedUpsert } from "@/utils/chunkedUpsert";
+import { promiseBatch } from "@/utils/promiseBatch";
 import { Pinecone, PineconeRecord } from "@pinecone-database/pinecone";
 import { LocalCrawler, Page } from "./localCrawler"; // Adjust the import path as needed
 import md5 from "md5";
@@ -52,7 +54,8 @@ async function seed(startPath: string, ignoreFile: string, limit: number, indexN
     console.log('Documents prepared. Starting to get embeddings...');
 
     // Get the vector embeddings for the documents
-    const vectors = await Promise.all(documents.flat().map(embedDocument));
+    const vectors = await promiseBatch(documents.flat(), embedDocument, 10); // Process in batches of 10
+    //const vectors = await Promise.all(documents.flat().map(embedDocument));
 
     console.log('Got embeddings. Starting upsert into Pinecone.');
 
@@ -72,7 +75,9 @@ async function seed(startPath: string, ignoreFile: string, limit: number, indexN
 async function embedDocument(doc: Document): Promise<PineconeRecord> {
   try {
     // Generate OpenAI embeddings for the document content
-    const embedding = await getEmbeddings(doc.pageContent);
+    //const embedding = await getEmbeddings(doc.pageContent);
+    // Use the retry mechanism
+    const embedding = await getEmbeddingsWithRetry(doc.pageContent);
 
     // Create a hash of the document content
     const hash = md5(doc.pageContent);

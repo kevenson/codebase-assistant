@@ -6,6 +6,18 @@ const config = new Configuration({
 })
 const openai = new OpenAIApi(config)
 
+export async function getEmbeddingsWithRetry(input: string, retries = 3): Promise<number[]> {
+  for (let i = 0; i < retries; i++) {
+      try {
+          return await getEmbeddings(input);
+      } catch (e) {
+          if (i === retries - 1) throw e; // Throw the error if it's the last retry
+          console.log(`Retry ${i + 1} failed, trying again...`);
+      }
+  }
+  throw new Error("All retries failed.");
+}
+
 export async function getEmbeddings(input: string) {
   try {
     const response = await openai.createEmbedding({
