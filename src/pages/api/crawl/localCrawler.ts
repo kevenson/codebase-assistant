@@ -26,6 +26,7 @@ class LocalCrawler {
   async crawl(startPath: string, ignoreFile: string): Promise<Page[]> {
     // Load ignore patterns
     console.log(ignoreFile);
+    console.log('Starting crawl from:', startPath);
     //const ignorePatterns = fs.readFileSync(ignoreFile, 'utf-8');
     //this.ig.add(ignorePatterns);
     try {
@@ -42,6 +43,8 @@ class LocalCrawler {
     // Start processing the directory
     this.processDirectory(startPath);
 
+    console.log('Crawl completed. Found', this.pages.length, 'pages.');
+
     // Return the crawled pages
     return this.pages;
   }
@@ -49,6 +52,8 @@ class LocalCrawler {
   // Process a directory: list its files, and decide whether to process or ignore each one
   private processDirectory(directoryPath: string) {
     const files = fs.readdirSync(directoryPath);
+
+    console.log('Processing directory:', directoryPath);
     
     for (const file of files) {
       // Stop if we have enough pages
@@ -71,6 +76,7 @@ class LocalCrawler {
   private processFile(filePath: string) {
     // Check if we've seen this file before or if it should be ignored
     if (this.isAlreadySeen(filePath) || this.shouldIgnore(filePath)) {
+      console.log('File already seen:', filePath);
       return;
     }
 
@@ -91,6 +97,7 @@ class LocalCrawler {
   private shouldIgnore(filePath: string) {
     //return this.ig.ignores(filePath);
     const relativePath = path.relative(process.cwd(), filePath);
+    console.log('Ignoring file:', filePath);
     return this.ig.ignores(relativePath);
   }
 }

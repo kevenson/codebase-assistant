@@ -65,6 +65,7 @@ export const Context: React.FC<ContextProps> = ({ className, selected }) => {
         } else {
             console.error('Error seeding:', data.error);
         }
+        console.log('Seed response:', data);
     } catch (error) {
         console.error('Error fetching:', error);
     }

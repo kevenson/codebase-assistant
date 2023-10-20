@@ -15,6 +15,7 @@ interface SeedOptions {
 type DocumentSplitter = RecursiveCharacterTextSplitter | MarkdownTextSplitter;
 
 async function seed(startPath: string, ignoreFile: string, limit: number, indexName: string, options: SeedOptions) {
+  console.log('Starting to seed with options:', options);
   try {
     // Initialize the Pinecone client
     const pinecone = new Pinecone();
@@ -48,11 +49,17 @@ async function seed(startPath: string, ignoreFile: string, limit: number, indexN
 
     const index = pinecone.Index(indexName);
 
+    console.log('Documents prepared. Starting to get embeddings...');
+
     // Get the vector embeddings for the documents
     const vectors = await Promise.all(documents.flat().map(embedDocument));
 
+    console.log('Got embeddings. Starting upsert into Pinecone.');
+
     // Upsert vectors into the Pinecone index
     await chunkedUpsert(index!, vectors, '', 10);
+
+    console.log('Upsert completed.');
 
     // Return the first document
     return documents[0];
