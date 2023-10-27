@@ -126,4 +126,18 @@ async function prepareDocument(page: Page, splitter: DocumentSplitter): Promise<
   });
 }
 
+async function getChangedDocuments(existingDocs: Document[], newDocs: Document[]): Promise<Document[]> {
+  const changedDocs: Document[] = [];
+  
+  for (const newDoc of newDocs) {
+      const existingDoc = existingDocs.find(d => d.metadata.path === newDoc.metadata.path);
+      if (!existingDoc || existingDoc.metadata.hash !== newDoc.metadata.hash) {
+          changedDocs.push(newDoc);
+      }
+  }
+
+  return changedDocs;
+}
+
+
 export default seed;

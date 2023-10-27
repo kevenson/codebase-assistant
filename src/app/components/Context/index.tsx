@@ -35,6 +35,7 @@ export const Context: React.FC<ContextProps> = ({ className, selected }) => {
       {children}
     </label>
   );
+
   // This is the new function that will be triggered when the user wants to seed from a directory
   const handleSeedFromDirectory = async () => {
     try {
@@ -69,13 +70,39 @@ export const Context: React.FC<ContextProps> = ({ className, selected }) => {
     } catch (error) {
         console.error('Error fetching:', error);
     }
-};
+  };
 
   // Set the directory using a prompt
   const handleSetDirectory = () => {
     const newDir = window.prompt("Enter the new directory path:", directoryPath);
     if (newDir) {
       setDirectoryPath(newDir);
+    }
+  };
+
+  const handleUpdateEmbeddings = async () => {
+    try {
+        const response = await fetch('/api/updateEmbeddings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                startPath: directoryPath,
+                options: {
+                    splittingMethod,
+                    chunkSize,
+                    chunkOverlap: overlap
+                }
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Handle the response data as required.
+  
+    } catch (error) {
+        console.error('Error updating embeddings:', error);
     }
   };
 
@@ -102,6 +129,13 @@ export const Context: React.FC<ContextProps> = ({ className, selected }) => {
             className="my-2 mr-2"
           >
             Seed from Directory
+          </Button>
+
+          <Button
+            onClick={handleUpdateEmbeddings}
+            className="my-2 mr-2"
+          >
+            Update Embeddings
           </Button>
 
           {/* Clear Index button */}
@@ -170,3 +204,8 @@ export const Context: React.FC<ContextProps> = ({ className, selected }) => {
     </div>
   );
 };
+
+
+
+
+
